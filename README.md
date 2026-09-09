@@ -13,8 +13,11 @@ resnet_cifar10/
 ├── test.py         # 测试集评估、每类准确率、混淆矩阵
 ├── predict.py      # 单张图片预测
 ├── plot.py         # 根据训练历史绘制 Loss / Accuracy 曲线
+├── analyze_errors.py  # 找出测试集预测错误的图片并可视化
 ├── loss_curve.png
 ├── accuracy_curve.png
+├── error_cat_as_dog.png
+├── error_dog_as_cat.png
 └── training_history.pth
 ```
 
@@ -115,6 +118,31 @@ y = F(x) + x
 | truck | 96.20% |
 
 最容易混淆的是猫和狗：模型经常把猫认成狗（51 次），因为两者在颜色、纹理、姿态上本来就比较接近。误分类主要集中在这两类，说明对相似类别的区分能力还有提升空间。
+
+## 错误分析：模型最容易在哪里犯错
+
+运行 `python analyze_errors.py` 会遍历整个测试集，找出所有预测错误的图片，并自动生成"猫被认成狗""狗被认成猫"的样例图。
+
+测试集共 634 张预测错误，最容易混淆的类别对：
+
+| 真实类别 → 预测类别 | 错误次数 |
+|---|---:|
+| dog → cat | 75 |
+| cat → dog | 51 |
+| truck → automobile | 24 |
+| bird → deer | 22 |
+| airplane → ship | 21 |
+| frog → cat | 20 |
+| ship → airplane | 20 |
+| cat → deer | 19 |
+
+狗被认成猫（75 次）比猫被认成狗（51 次）更多，说明模型对"猫"这个类别的判定范围偏宽。下图是从两组错误中各挑出的 15 个样本（图片下方标注：真实类别 → 预测类别）：
+
+![猫被认成狗](error_cat_as_dog.png)
+
+![狗被认成猫](error_dog_as_cat.png)
+
+观察这些错误样本可以发现两个规律：一是错误集中在**外形相近的类别**上，比如狗/猫、卡车/汽车、飞机/轮船；二是很多错误图片本身**背景杂乱、只露出半个身体、姿态刁钻**，在 32×32 的低分辨率下，这类图片本来就非常难判断。
 
 ## 从 AlexNet 到 ResNet：经典 CNN 演进主线
 
